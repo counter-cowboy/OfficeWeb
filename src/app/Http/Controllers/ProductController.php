@@ -6,9 +6,13 @@ use App\Http\Requests\ProductRequest;
 use App\Imports\ProductsImport;
 use App\Jobs\ProductJob;
 use App\Models\Product;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use PHPUnit\Exception;
 
 class ProductController extends Controller
 {
@@ -23,11 +27,15 @@ class ProductController extends Controller
     {
         $data = $request->validated();
 
-        $file = Storage::disk('public')->put('/', $data['excel']);
+        try {
+            $file = Storage::put('/', $data['excel']);
+        }catch (\Exception $exception){
+            return $exception->getMessage();
+        }
 
-        ProductJob::dispatch($file);
+        ProductJob::dispatchSync($file);
 
-        return redirect()->route('product.index');
+        return redirect()->route('products.index');
     }
 
     public function show(Product $product)

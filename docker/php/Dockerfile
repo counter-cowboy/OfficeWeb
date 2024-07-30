@@ -14,7 +14,5 @@ RUN docker-php-ext-configure gd --with-jpeg --with-freetype && \
 RUN docker-php-ext-install curl xml iconv zip simplexml xml pdo pdo_mysql
 RUN docker-php-ext-enable curl xml iconv zip simplexml xml pdo pdo_mysql
 
-RUN php artisan migrate
-RUN php artisan storage:link
-RUN chmod 777 -R storage
-RUN php artisan queue:work
+#ENTRYPOINT ["./entrypoint.sh"]
+

@@ -26,6 +26,7 @@ services:
         - "3306:3306"
       environment:
         - MYSQL_ROOT_PASSWORD=root
+        - MYSQL_DATABASE=larabase
         - MYSQL_TCP_PORT=3306
       volumes:
         - './docker/volume/mysql:/var/lib/mysql'
@@ -38,4 +39,4 @@ services:
         - PMA_HOST=mysql
         - PMA_PORT=3306
       depends_on:
-            - mysql
+        - mysql

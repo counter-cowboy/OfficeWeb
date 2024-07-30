@@ -7,6 +7,7 @@ use App\Models\Keyvalue;
 use App\Models\Product;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Mockery\Exception;
 
 class ProductService
 {
@@ -46,7 +47,7 @@ class ProductService
          * Работаем с таблицей images - изображения упаковки сохраняем на диск
          */
 
-        $pathToBoxFile =self::imagePackageSave($row, $prodId);
+        $pathToBoxFile = self::imagePackageSave($row, $prodId);
 
         /**
          * Работаем с таблицей images - изображения товара и упаковки заносим в БД
@@ -79,7 +80,7 @@ class ProductService
 
     }
 
-    public static function imageProductSave($imageUrls, $prodId): array
+    public static function imageProductSave($imageUrls, $prodId)
     {
         $imgPath = [];
 
@@ -97,8 +98,13 @@ class ProductService
 
                     $imgPath[] = $pathToFile = $randomName;
 
-                    Storage::disk('public')
-                        ->put($pathToFile, $response->body());
+                    try {
+                        Storage::disk('public')
+                            ->put($pathToFile, $response->body());
+                    } catch (\Exception $exception) {
+                        return $exception->getMessage();
+                    }
+
                 } else {
                     $errorId = $prodId;
                     echo "Error product ID ${errorId}. Some images can be unreachable.<br>";
@@ -106,7 +112,6 @@ class ProductService
             }
         }
         return $imgPath;
-
     }
 
     public static function imagePackageSave($row, $prodId): string
@@ -123,8 +128,14 @@ class ProductService
             $randomBoxName = uniqid() . '_' . rand(1, 100) . '_' . $nameBoxImg . '.' . $extensionBox;
             $pathToBoxFile = $randomBoxName;
 
-            Storage::disk('public')
-                ->put($pathToBoxFile, $responseBox->body());
+            try{
+                Storage::disk('public')
+                    ->put($pathToBoxFile, $responseBox->body());
+            }
+            catch (\Exception $exception){
+                return  $exception->getMessage();
+            }
+
         } else {
             $errId = $prodId;
             echo "Error box image ID ${errId}";
