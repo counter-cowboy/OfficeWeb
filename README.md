@@ -4,6 +4,15 @@
 
     cd src
 
+#### Сконфигурировать файл .env
+
+    DB_CONNECTION=mysql
+    DB_HOST=mysql
+    DB_PORT=3306
+    DB_DATABASE=larabase
+    DB_USERNAME=root
+    DB_PASSWORD=root
+
 #### Получить APP_KEY:
 
     make key
