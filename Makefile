@@ -9,3 +9,6 @@ migrate:
 
 down:
 	docker compose down
+
+key:
+	php artisan key:generate
