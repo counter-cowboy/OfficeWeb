@@ -11,7 +11,7 @@ use Mockery\Exception;
 
 class ProductDbService
 {
-    public static function getProductId($row): int
+    public static function storeProduct($row): int
     {
         $discount = true;
 

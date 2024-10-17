@@ -15,7 +15,7 @@ class ProductsExcelToDbImport implements ToCollection, WithHeadingRow
 
         foreach ($collection as $row) {
              //* Работаем с таблицей products
-            $prodId = ProductDbService::getProductId($row);
+            $prodId = ProductDbService::storeProduct($row);
 
              //* Работаем с таблицей images
             ProductDbService::imageDBHandler($row, $prodId);
