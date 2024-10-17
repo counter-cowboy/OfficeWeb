@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Imports\ProductsImport;
+use App\Imports\ProductsExcelToDbImport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -10,17 +10,18 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Maatwebsite\Excel\Facades\Excel;
 
-class ProductJob implements ShouldQueue
+class ProductExcelImportJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $request;
+    private string $filePath;
+
     /**
      * Create a new job instance.
      */
-    public function __construct($request)
+    public function __construct(string $filePath)
     {
-        $this->request=$request;
+        $this->filePath = $filePath;
     }
 
     /**
@@ -28,6 +29,6 @@ class ProductJob implements ShouldQueue
      */
     public function handle(): void
     {
-       Excel::import(new ProductsImport(), $this->request);
+        Excel::import(new ProductsExcelToDbImport(), $this->filePath);
     }
 }

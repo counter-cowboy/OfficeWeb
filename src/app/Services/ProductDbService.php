@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Mockery\Exception;
 
-class ProductService
+class ProductDbService
 {
-    public static function product($row)
+    public static function getProductId($row): int
     {
         $discount = true;
 
@@ -31,31 +31,24 @@ class ProductService
         return $product->id;
     }
 
-    public static function image($row, $prodId): void
+    public static function imageDBHandler($row, $productId): void
     {
-
         $imageUrls = explode(', ', $row['dop_pole_ssylki_na_foto']);
 
-        /**
-         *  Сохраняем изображения товара на диск
-         */
+        //*  Сохраняем изображения товара на диск
 
-        $imgPath = self::imageProductSave($imageUrls, $prodId);
+        $imgPath = self::imageProductSave($imageUrls, $productId);
 
+        //  * Работаем с таблицей images - изображения упаковки сохраняем на диск
 
-        /**
-         * Работаем с таблицей images - изображения упаковки сохраняем на диск
-         */
+        $pathToBoxFile = self::imagePackageSave($row, $productId);
 
-        $pathToBoxFile = self::imagePackageSave($row, $prodId);
+        //* Работаем с таблицей images - изображения товара и упаковки заносим в БД
 
-        /**
-         * Работаем с таблицей images - изображения товара и упаковки заносим в БД
-         */
-        self::imagesSaveDb($imgPath, $pathToBoxFile, $prodId);
+        self::imagesSaveDb($imgPath, $pathToBoxFile, $productId);
     }
 
-    public static function keyvalue($row, $prodId): void
+    public static function keyvalueTableSaveDb($row, $productId): void
     {
         Keyvalue::firstOrCreate([
             'size' => $row['dop_pole_razmer'],
@@ -75,46 +68,42 @@ class ProductService
             'package_height' => $row['dop_pole_vysota_upakovkimm'],
             'package_length' => $row['dop_pole_dlina_upakovkimm'],
             'product_category' => $row['dop_pole_kategoriia_tovara'],
-            'product_id' => $prodId
+            'product_id' => $productId
         ]);
 
     }
 
-    public static function imageProductSave($imageUrls, $prodId)
+    public static function imageProductSave($imageUrls, $productId): array|string
     {
         $imgPath = [];
 
         foreach ($imageUrls as $img) {
-
-
             if (!empty($img)) {
                 $response = Http::get($img);
 
                 if ($response->successful()) {
                     $originalFileName = basename($img);
                     $extension = pathinfo($originalFileName, PATHINFO_EXTENSION);
-                    $nameImg = pathinfo($originalFileName, PATHINFO_FILENAME);
-                    $randomName = uniqid() . '_' . rand(1, 100) . '_' . $nameImg . '.' . $extension;
+                    $imgName = pathinfo($originalFileName, PATHINFO_FILENAME);
+                    $randomName = uniqid() . '_' . rand(1, 100) . '_' . $imgName . '.' . $extension;
 
-                    $imgPath[] = $pathToFile = $randomName;
+                    $imgPath[] = $randomName;
 
                     try {
-                        Storage::disk('public')
-                            ->put($pathToFile, $response->body());
+                        Storage::disk('public')->put($randomName, $response->body());
                     } catch (\Exception $exception) {
                         return $exception->getMessage();
                     }
 
                 } else {
-                    $errorId = $prodId;
-                    echo "Error product ID ${errorId}. Some images can be unreachable.<br>";
+                    echo "Error product ID $productId. Some images can be unreachable.<br>";
                 }
             }
         }
         return $imgPath;
     }
 
-    public static function imagePackageSave($row, $prodId): string
+    public static function imagePackageSave($row, $productId): string
     {
         $imageBox = $row['dop_pole_ssylka_na_upakovku'];
         $responseBox = Http::get($imageBox);
@@ -125,41 +114,35 @@ class ProductService
             $originalBoxName = basename($imageBox);
             $extensionBox = pathinfo($originalBoxName, PATHINFO_EXTENSION);
             $nameBoxImg = pathinfo($originalBoxName, PATHINFO_FILENAME);
-            $randomBoxName = uniqid() . '_' . rand(1, 100) . '_' . $nameBoxImg . '.' . $extensionBox;
-            $pathToBoxFile = $randomBoxName;
+            $pathToBoxFile = uniqid() . '_' . rand(1, 100) . '_' . $nameBoxImg . '.' . $extensionBox;
 
-            try{
+            try {
                 Storage::disk('public')
                     ->put($pathToBoxFile, $responseBox->body());
-            }
-            catch (\Exception $exception){
-                return  $exception->getMessage();
+            } catch (\Exception $exception) {
+                return $exception->getMessage();
             }
 
         } else {
-            $errId = $prodId;
-            echo "Error box image ID ${errId}";
+            echo "Error box image ID $productId";
         }
         return $pathToBoxFile;
     }
 
-    public static function imagesSaveDb($imgPath, $pathToBoxFile, $prodId): void
+    public static function imagesSaveDb($imgPath, $pathToBoxFile, $productId): void
     {
         $img_1 = $imgPath[0] ?? '';
         $img_2 = $imgPath[1] ?? '';
         $img_3 = $imgPath[2] ?? '';
         $img_4 = $imgPath[3] ?? '';
 
-
-        $imgFinal = Image::firstOrCreate([
+        Image::firstOrCreate([
             'image_box' => $pathToBoxFile,
-            'product_id' => $prodId,
+            'product_id' => $productId,
             'image_1' => $img_1,
             'image_2' => $img_2,
             'image_3' => $img_3,
             "image_4" => $img_4
         ]);
-
     }
-
 }

@@ -3,16 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductRequest;
-use App\Imports\ProductsImport;
-use App\Jobs\ProductJob;
+use App\Jobs\ProductExcelImportJob;
 use App\Models\Product;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
-use PHPUnit\Exception;
+
 
 class ProductController extends Controller
 {
@@ -33,7 +27,7 @@ class ProductController extends Controller
             return $exception->getMessage();
         }
 
-        ProductJob::dispatchSync($file);
+        ProductExcelImportJob::dispatchSync($file);
 
         return redirect()->route('products.index');
     }
@@ -46,18 +40,5 @@ class ProductController extends Controller
     public function create()
     {
         return view('product.upload');
-    }
-
-
-    public function edit($id)
-    {
-    }
-
-    public function update(Request $request, $id)
-    {
-    }
-
-    public function destroy($id)
-    {
     }
 }
